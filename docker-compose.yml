@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: placement-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: placement_tracker
+      POSTGRES_USER: placement_user
+      POSTGRES_PASSWORD: placement_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
