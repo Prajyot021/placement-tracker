@@ -217,6 +217,7 @@ function render() {
         <div class="card-actions">
           <button class="button button-secondary" data-action="details" data-id="${escapeHTML(company.id)}">View details</button>
           <button class="button ${applied ? "button-quiet" : "button-primary"}" data-action="application" data-id="${escapeHTML(company.id)}">${applied ? "Undo applied" : "Mark applied"}</button>
+          <button class="button button-delete" data-action="delete" data-id="${escapeHTML(company.id)}" aria-label="Delete ${escapeHTML(company.name)}">Delete</button>
         </div>
       </article>`;
   }).join("");
@@ -224,6 +225,33 @@ function render() {
   $("#emptyState").classList.toggle("hidden", filtered.length > 0);
   grid.classList.toggle("hidden", filtered.length === 0);
 }
+
+async function deleteCompany(id) {
+  const company = companies.find(item => item.id === id);
+  if (!company) return;
+  if (!confirm(`Delete ${company.name} for everyone? This cannot be undone.`)) return;
+  if (company.id.startsWith("sample-")) {
+    showToast("This is a sample listing and cannot be deleted from the database.");
+    return;
+  }
+  try {
+    const response = await fetch(`${COMPANIES_ENDPOINT}?id=eq.${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: apiHeaders({ Prefer: "return=minimal" })
+    });
+    if (!response.ok) throw new Error(await response.text());
+    companies = companies.filter(item => item.id !== id);
+    delete applications[id];
+    saveApplications();
+    render();
+    if ($("#detailsDialog").open) $("#detailsDialog").close();
+    showToast("Listing deleted for everyone.");
+  } catch (error) {
+    console.error("Could not delete company:", error);
+    showToast("Delete failed. Check the Supabase DELETE policy.");
+  }
+}
+
 function showToast(message) {
   const toast = $("#toast");
   toast.textContent = message;
@@ -334,6 +362,7 @@ grid.addEventListener("click", event => {
   if (!button) return;
   const { action, id } = button.dataset;
   if (action === "details") openDetails(id);
+  if (action === "delete") deleteCompany(id);
   if (action === "application") {
     applications[id] = (applications[id] || "Not Applied") === "Applied" ? "Not Applied" : "Applied";
     saveApplications();
