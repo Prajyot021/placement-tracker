@@ -329,3 +329,8 @@ img, svg, video { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Delete action: visible and thumb-friendly on mobile. */
+.button-delete { border: 1px solid #d94848; color: #d94848; background: transparent; }
+.button-delete:hover { background: rgba(217, 72, 72, 0.10); }
+@media (max-width: 560px) { .card-actions { display: grid; grid-template-columns: 1fr 1fr; } .card-actions .button-delete { grid-column: 1 / -1; } }
