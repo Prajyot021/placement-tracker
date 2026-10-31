@@ -1,5 +1,5 @@
--- Run this once in Supabase SQL Editor after the original companies table was created.
--- Adds fields used by the existing placement-tracker interface and aligns the public INSERT policy.
+-- Run this in Supabase SQL Editor. Safe to rerun.
+-- Adds fields used by the placement tracker interface.
 ALTER TABLE public.companies
   ADD COLUMN IF NOT EXISTS short_name TEXT DEFAULT '',
   ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'Full-time',
@@ -11,16 +11,16 @@ ALTER TABLE public.companies
 
 DROP POLICY IF EXISTS "Anyone can add companies" ON public.companies;
 CREATE POLICY "Anyone can add companies"
-ON public.companies
-FOR INSERT
-TO anon, authenticated
+ON public.companies FOR INSERT TO anon, authenticated
 WITH CHECK (
   LENGTH(TRIM(name)) > 0
-  AND eligibility_percentage >= 0
-  AND eligibility_percentage <= 100
-  AND percentage >= 0
-  AND percentage <= 100
+  AND eligibility_percentage >= 0 AND eligibility_percentage <= 100
+  AND percentage >= 0 AND percentage <= 100
   AND status IN ('Open', 'Closed', 'Upcoming', 'Applications Open', 'Registration Closed', 'Completed')
 );
 
--- Keep public SELECT enabled from the original setup. Public UPDATE and DELETE are intentionally not allowed.
+-- Anyone can delete any listing. This is intentionally public as requested.
+DROP POLICY IF EXISTS "Anyone can delete companies" ON public.companies;
+CREATE POLICY "Anyone can delete companies"
+ON public.companies FOR DELETE TO anon, authenticated
+USING (true);
